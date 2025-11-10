@@ -215,6 +215,26 @@ h1{font-size:48px}h2{font-size:36px}h3{font-size:26px}
 /* MENU */
 .menu{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;display:flex;gap:8px;background:#ffffffcc;padding:10px 12px;border:1px solid var(--line);border-radius:999px;backdrop-filter:blur(8px);z-index:50}
 .menu a{font-family:"Cormorant Garamond",serif;font-weight:700;font-size:14px;color:#000}
+
+/* 첫 섹션(#home) 위 여백 줄이기 */
+.wrap > section:first-of-type { 
+  padding-top: 12px;  /* 기존 56px → 12px */
+}
+
+/* 모바일일 때는 노치 여백 고려해서 아주 살짝만 */
+@media (max-width: 480px) {
+  .wrap > section:first-of-type {
+    padding-top: calc(env(safe-area-inset-top) + 8px);
+  }
+}
+
+/* 혹시 .hero 자체 패딩이 남아있다면 안전하게 0으로 */
+#home.hero { padding-top: 0; }
+
+/* 히어로 카드가 위로 더 붙길 원하면(선택 사항) */
+// .hero-card { margin-top: 0; }
+
+  
 </style>
 </head>
 
