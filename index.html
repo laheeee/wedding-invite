@@ -360,21 +360,17 @@ document.querySelectorAll('[data-copy]').forEach(btn=>{
 });
 </script>
 
-
-
-
-
 <section style="text-align:center;border:none;padding-bottom:90px">
   <div class="sub">MADE BY LAHEE · Hosted on GitHub Pages</div>
 </section>
 
 </main>
 
-<!-- 카카오맵 + 카운트다운 스크립트 (동적 로드 버전) -->
+<!-- Google Maps + 카운트다운 -->
 <script>
-document.addEventListener("DOMContentLoaded",()=>{
-  // 카운트다운 (2026.08.08 16:00 기준)
-  const target = new Date("2026-08-08T16:00:00+09:00");
+document.addEventListener("DOMContentLoaded", () => {
+  // 🕒 카운트다운 (2026.08.08 16:00 기준)
+  const target = new Date("2026-08-08T00:00:00+09:00");
   const dd = document.getElementById('dd'),
         hh = document.getElementById('hh'),
         mm = document.getElementById('mm'),
@@ -393,23 +389,21 @@ document.addEventListener("DOMContentLoaded",()=>{
     ss.textContent = s.toString().padStart(2,'0');
   }
   tick();
-  setInterval(tick,1000);
+  setInterval(tick, 1000);
 
-  // Kakao 지도 동적 로드
-  const script = document.createElement("script");
-  script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=05fab68d220c60fb809f66d4bfe911f4";
-  script.onload = () => {
-    const container = document.getElementById("map");
-    const options = { center: new kakao.maps.LatLng(37.520355, 127.038647), level: 3 };
-    const map = new kakao.maps.Map(container, options);
-    const markerPosition = new kakao.maps.LatLng(37.520355, 127.038647);
-    const marker = new kakao.maps.Marker({ position: markerPosition });
-    marker.setMap(map);
-    const iwContent = '<div style="padding:8px 12px;font-size:14px;color:#000;">더채플앳청담</div>';
-    const infowindow = new kakao.maps.InfoWindow({ position: markerPosition, content: iwContent });
-    infowindow.open(map, marker);
-  };
-  document.head.appendChild(script);
+  // Google 지도 표시
+  const mapContainer = document.getElementById("map");
+  const iframe = document.createElement("iframe");
+  iframe.width = "100%";
+  iframe.height = "400";
+  iframe.style.border = "0";
+  iframe.style.borderRadius = "16px";
+  iframe.loading = "lazy";
+  iframe.allowFullscreen = "";
+  iframe.referrerPolicy = "no-referrer-when-downgrade";
+  iframe.src = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3165.232308192542!2d127.0360562765073!3d37.52034132729725!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x357ca3905b4c6cf9%3A0x37c1c4ebf7c646f2!2z64yA7YWM7LKc7ZSE7JWE7Iqk7Yq4!5e0!3m2!1sko!2skr!4v1731234567890!5m2!1sko!2skr";
+  mapContainer.innerHTML = "";
+  mapContainer.appendChild(iframe);
 });
 </script>
 
