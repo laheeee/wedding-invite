@@ -224,11 +224,19 @@ h1{font-size:48px}h2{font-size:36px}h3{font-size:26px}
   <source src="assets/music.mp3" type="audio/mpeg">
 </audio>
 <script>
-document.addEventListener('touchstart',()=>{
-  const a=document.getElementById('bgm');
-  if(a&&a.muted){a.muted=false;a.volume=0.5;a.play().catch(()=>{});}
-},{once:true});
+function activateBGM(){
+  const a = document.getElementById('bgm');
+  if (!a) return;
+  if (a.muted) {
+    a.muted = false;
+    a.volume = 0.5;
+    a.play().catch(()=>{});
+  }
+}
+document.addEventListener('touchstart', activateBGM, { once: true }); // 모바일 터치
+document.addEventListener('click',      activateBGM, { once: true }); // PC 클릭
 </script>
+
 
 <nav class="menu">
   <a href="#home">HOME</a>
