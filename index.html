@@ -370,44 +370,49 @@ document.querySelectorAll('[data-copy]').forEach(btn=>{
 
 </main>
 
-<!-- 카카오맵 + 카운트다운 스크립트 -->
-<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=05fab68d220c60fb809f66d4bfe911f4"></script>
+<!-- 카카오맵 + 카운트다운 스크립트 (동적 로드 버전) -->
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
-  // 카운트다운
-  const target=new Date("2026-08-08T00:00:00+09:00");
-  const dd=document.getElementById('dd'),
-        hh=document.getElementById('hh'),
-        mm=document.getElementById('mm'),
-        ss=document.getElementById('ss');
+  // 카운트다운 (2026.08.08 16:00 기준)
+  const target = new Date("2026-08-08T16:00:00+09:00");
+  const dd = document.getElementById('dd'),
+        hh = document.getElementById('hh'),
+        mm = document.getElementById('mm'),
+        ss = document.getElementById('ss');
   function tick(){
-    const now=new Date();
-    let t=(target-now)/1000;
-    if(t<0)t=0;
-    const d=Math.floor(t/86400);t%=86400;
-    const h=Math.floor(t/3600);t%=3600;
-    const m=Math.floor(t/60);
-    const s=Math.floor(t%60);
-    dd.textContent=d.toString().padStart(2,'0');
-    hh.textContent=h.toString().padStart(2,'0');
-    mm.textContent=m.toString().padStart(2,'0');
-    ss.textContent=s.toString().padStart(2,'0');
+    const now = new Date();
+    let t = (target - now)/1000;
+    if(t < 0) t = 0;
+    const d = Math.floor(t/86400); t %= 86400;
+    const h = Math.floor(t/3600); t %= 3600;
+    const m = Math.floor(t/60);
+    const s = Math.floor(t%60);
+    dd.textContent = d.toString().padStart(2,'0');
+    hh.textContent = h.toString().padStart(2,'0');
+    mm.textContent = m.toString().padStart(2,'0');
+    ss.textContent = s.toString().padStart(2,'0');
   }
   tick();
   setInterval(tick,1000);
 
-  // 지도
-  const container=document.getElementById('map');
-  const options={center:new kakao.maps.LatLng(37.520355,127.038647),level:3};
-  const map=new kakao.maps.Map(container,options);
-  const markerPosition=new kakao.maps.LatLng(37.520355,127.038647);
-  const marker=new kakao.maps.Marker({position:markerPosition});
-  marker.setMap(map);
-  const iwContent='<div style="padding:8px 12px;font-size:14px;color:#000;">더채플앳청담</div>';
-  const infowindow=new kakao.maps.InfoWindow({position:markerPosition,content:iwContent});
-  infowindow.open(map,marker);
+  // Kakao 지도 동적 로드
+  const script = document.createElement("script");
+  script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=05fab68d220c60fb809f66d4bfe911f4";
+  script.onload = () => {
+    const container = document.getElementById("map");
+    const options = { center: new kakao.maps.LatLng(37.520355, 127.038647), level: 3 };
+    const map = new kakao.maps.Map(container, options);
+    const markerPosition = new kakao.maps.LatLng(37.520355, 127.038647);
+    const marker = new kakao.maps.Marker({ position: markerPosition });
+    marker.setMap(map);
+    const iwContent = '<div style="padding:8px 12px;font-size:14px;color:#000;">더채플앳청담</div>';
+    const infowindow = new kakao.maps.InfoWindow({ position: markerPosition, content: iwContent });
+    infowindow.open(map, marker);
+  };
+  document.head.appendChild(script);
 });
 </script>
+
 
 </body>
 </html>
