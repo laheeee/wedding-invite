@@ -123,6 +123,85 @@ h1{font-size:48px}h2{font-size:36px}h3{font-size:26px}
 .snap{overflow:auto;white-space:nowrap;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:20px 0}
 .snap .item{display:inline-block;width:78%;max-width:360px;margin:0 10px;scroll-snap-align:center;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:3/4}
 
+/* ===== Film Photos : 4컷 균등 높이 + 메뉴 가림 최소화 ===== */
+.photo-section.film-dark {
+  background: #151213;
+  color: #fff;
+  padding: 64px 0 48px;
+}
+.photo-section.film-dark h2 { color:#fff; }
+
+.film-4cut { max-width: 880px; margin: 0 auto; }
+.film-4cut .hint {
+  text-align: center;
+  color: #ddd;
+  font-size: 15px;
+  margin: -4px 0 20px;
+  letter-spacing: .02em;
+}
+
+/* 전체 높이를 살짝 줄여서 퀵메뉴에 안 겹치게 */
+.film-stack {
+  display: flex;
+  flex-direction: column;
+  height: clamp(640px, 80vh, 820px); /* ← 핵심: 80vh로 줄임 */
+  gap: 0;
+}
+
+/* 각 컷은 전체 높이의 1/4씩 동일하게 */
+.film-panel {
+  flex: 1 1 25%;
+  position: relative;
+  border-radius: 0;
+  overflow: hidden;
+  background: #000;
+  cursor: pointer;
+  transition: flex-basis .7s ease, box-shadow .25s ease;
+}
+.film-panel:first-child { border-radius: 16px 16px 0 0; }
+.film-panel:last-child  { border-radius: 0 0 16px 16px; }
+
+/* 하나 열리면 나머지 컷은 줄고, 열린 컷이 남은 공간 차지 */
+.film-stack.has-open .film-panel {
+  flex: 0 0 8%;
+}
+.film-stack.has-open .film-panel.is-open {
+  flex: 1 1 auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  z-index: 2;
+}
+
+/* 이미지 */
+.film-panel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% var(--pos, 50%);
+  transition: object-fit .7s ease, object-position .7s ease;
+  display: block;
+}
+.film-panel.is-open img {
+  object-fit: contain;
+  object-position: 50% 50%;
+  background: #000;
+}
+
+/* 경계선 */
+.film-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+/* 모바일 대응 */
+@media (max-width:480px){
+  .film-stack { height: clamp(580px, 78vh, 760px); } /* ← 모바일에서도 살짝 줄임 */
+}
+
+
+
 /* Contact */
 .contact-card{display:flex;flex-direction:column;gap:10px}
 .contact-head{display:flex;justify-content:space-between;align-items:center}
@@ -222,13 +301,22 @@ document.addEventListener('touchstart',()=>{
   </div>
 </section>
 
-<section class="photo-section">
-  <h2 style="text-align:center;">Film Photos</h2>
-  <div class="film"><div class="strip">
-    <div class="shot"><img src="assets/film1.jpg"></div>
-    <div class="shot"><img src="assets/film2.jpg"></div>
-  </div></div>
+
+<section class="photo-section film-dark" id="film">
+  <div class="film-4cut">
+    <h2 style="text-align:center;">Film Photos</h2>
+    <p class="hint">클릭하면 확장이 가능합니다</p>
+
+    <div class="film-stack">
+      <div class="film-panel" style="--pos: 10%;"><img src="assets/film1.jpg" alt="Film cut 1"></div>
+      <div class="film-panel" style="--pos: 35%;"><img src="assets/film1.jpg" alt="Film cut 2"></div>
+      <div class="film-panel" style="--pos: 70%;"><img src="assets/film1.jpg" alt="Film cut 3"></div>
+      <div class="film-panel" style="--pos: 95%;"><img src="assets/film1.jpg" alt="Film cut 4"></div>
+    </div>
+  </div>
 </section>
+
+
 
 <section class="photo-section">
   <h2 style="text-align:center;">Our Self Snapshots</h2>
@@ -421,6 +509,47 @@ document.addEventListener("DOMContentLoaded", () => {
   mapContainer.appendChild(iframe);
 });
 </script>
+
+<script>
+/* Film Photos : 한 번에 하나만 펼치기 + 나머지 얇아지기 */
+(function(){
+  const panels = document.querySelectorAll('.film-panel');
+  const stack  = document.querySelector('.film-stack');
+  if(!panels.length || !stack) return;
+
+  function closeAll(except){
+    let anyOpen = false;
+    panels.forEach(p=>{
+      if(p !== except){
+        p.classList.remove('is-open');
+      }else if(except){
+        anyOpen = true;
+      }
+    });
+    // except가 없으면 모두 닫힘 상태
+    if(!except){
+      stack.classList.remove('has-open');
+    }else{
+      stack.classList.add('has-open');
+    }
+  }
+
+  panels.forEach(p=>{
+    p.addEventListener('click', ()=>{
+      const willOpen = !p.classList.contains('is-open');
+      closeAll(willOpen ? p : null);
+      p.classList.toggle('is-open', willOpen);
+
+      // 모두 닫힌 경우 has-open 제거
+      if(!willOpen){
+        const stillOpen = Array.from(panels).some(el => el.classList.contains('is-open'));
+        stack.classList.toggle('has-open', stillOpen);
+      }
+    });
+  });
+})();
+</script>
+
 
 
 </body>
