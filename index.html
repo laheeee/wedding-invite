@@ -638,10 +638,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function setIcon(playing){
     if(playing){
       icon.innerHTML = '<path d="M5 9v6h4l5 5V4L9 9H5z"/><path d="M14.5 12c0-1.77-.77-3.35-2-4.44v8.88c1.23-1.09 2-2.67 2-4.44z"/>';
-      if(label) label.textContent = '음악 재생중 · 탭해서 끄기/조절';
+      if(label) label.textContent = '음악 재생중 탭해서 조절';
     }else{
       icon.innerHTML = '<path d="M5 9v6h4l5 5V4L9 9H5z" opacity=".7"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="2" fill="none"/>';
-      if(label) label.textContent = '음악 꺼짐 · 탭해서 켜기';
+      if(label) label.textContent = '음악 꺼짐';
     }
   }
 
