@@ -243,15 +243,54 @@ h1{font-size:48px}h2{font-size:36px}h3{font-size:26px}
 /* 히어로 카드가 위로 더 붙길 원하면(선택 사항) */
 // .hero-card { margin-top: 0; }
 
+/* 🔊 우상단 BGM FAB */
+.bgm-fab{
+  position:fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: calc(env(safe-area-inset-right, 0px) + 10px);
+  z-index:9999;
+  display:flex; align-items:center; gap:8px;
+  background: rgba(17,17,17,.92);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:999px;
+  padding:8px 12px;
+  box-shadow:0 8px 18px rgba(0,0,0,.25);
+  backdrop-filter: blur(6px);
+  -webkit-tap-highlight-color: transparent;
+  cursor:pointer;
+  transition: all .3s ease;
+  font-size:12px;
+}
+.bgm-fab .label{white-space:nowrap; opacity:.95;}
+/* 몇 초 후 축소되면 라벨 숨기고 아이콘만 */
+.bgm-fab.mini{ padding:8px; }
+.bgm-fab.mini .label{ display:none; }
+/* 첫 진입시 살짝 나타나는 애니메이션 */
+@keyframes bgmPop{from{transform:translateY(-6px);opacity:0}to{transform:none;opacity:1}}
+.bgm-fab.expanded{ animation:bgmPop .35s ease both; }
+
   
 </style>
 </head>
 
 <body>
+
 <!-- 🎵 배경음악 -->
-<audio id="bgm" autoplay loop muted>
+<audio id="bgm" preload="auto" playsinline autoplay loop muted>
   <source src="assets/music.mp3" type="audio/mpeg">
 </audio>
+<!-- 🔊 상단 음악 컨트롤 (처음엔 안내가 잠깐 뜨고, 이후 아이콘만 남음) -->
+<div id="bgmFab" class="bgm-fab expanded" style="display:none" role="button" aria-label="음악 재생/일시정지">
+  <!-- 아이콘 -->
+  <svg id="bgmFabIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M5 9v6h4l5 5V4L9 9H5z"/>
+  </svg>
+  <!-- 처음 몇 초 동안만 보일 라벨 -->
+  <span class="label" id="bgmFabLabel">음악 재생중 탭해서 조절</span>
+</div>
+
+  
 <script>
 function activateBGM(){
   const a = document.getElementById('bgm');
@@ -584,6 +623,82 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+})();
+</script>
+
+<script>
+(function(){
+  const audio = document.getElementById('bgm');
+  const fab   = document.getElementById('bgmFab');
+  const icon  = document.getElementById('bgmFabIcon');
+  const label = document.getElementById('bgmFabLabel');
+
+  if(!audio || !fab) return;
+
+  // 상태 표시
+  function setIcon(playing){
+    if(playing){
+      icon.innerHTML = '<path d="M5 9v6h4l5 5V4L9 9H5z"/><path d="M14.5 12c0-1.77-.77-3.35-2-4.44v8.88c1.23-1.09 2-2.67 2-4.44z"/>';
+      if(label) label.textContent = '음악 재생중 · 탭해서 끄기/조절';
+    }else{
+      icon.innerHTML = '<path d="M5 9v6h4l5 5V4L9 9H5z" opacity=".7"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="2" fill="none"/>';
+      if(label) label.textContent = '음악 꺼짐 · 탭해서 켜기';
+    }
+  }
+
+  // 처음엔 보이기 + 몇 초 뒤 축소
+  function showFab(){
+    if(fab.style.display !== 'flex'){
+      fab.style.display = 'flex';
+      fab.classList.add('expanded');
+      setTimeout(()=>{ fab.classList.remove('expanded'); fab.classList.add('mini'); }, 3500);
+    }
+  }
+
+  // 가능한 한 빨리(무음) 재생 시도
+  audio.volume = 0.0;      
+  audio.muted  = true;     
+  audio.play().catch(()=>{}); 
+  showFab();
+  setIcon(false);
+
+  // 사용자 제스처로 언뮤트+페이드인
+  const unlockEvents = ['pointerdown','click','keydown','wheel','touchstart','scroll','mousemove'];
+  let unlocked = false, unlocking = false;
+
+  async function unlockAndPlay(){
+    if(unlocked || unlocking) return;
+    unlocking = true;
+    try{
+      audio.muted  = false;
+      await audio.play();
+      unlocked = true;
+      // 부드러운 페이드인
+      const target=0.5, steps=15, step=target/steps;
+      let i=0; const id=setInterval(()=>{
+        audio.volume = Math.min(target, (audio.volume||0)+step);
+        if(++i>=steps) clearInterval(id);
+      }, 100);
+      setIcon(true);
+    }catch(e){}
+    finally{ unlocking = false; }
+  }
+  unlockEvents.forEach(ev=>document.addEventListener(ev, unlockAndPlay, {passive:true, once:false}));
+
+  // FAB 클릭: 토글
+  fab.addEventListener('click', async ()=>{
+    if(audio.paused || audio.muted){
+      await unlockAndPlay();
+    }else{
+      audio.pause();
+      setIcon(false);
+    }
+  });
+
+  // 상태 동기화
+  audio.addEventListener('play', ()=>{ setIcon(!audio.muted && !audio.paused); showFab(); });
+  audio.addEventListener('pause',()=> setIcon(false));
+  audio.addEventListener('volumechange',()=> setIcon(!audio.muted && !audio.paused));
 })();
 </script>
 
