@@ -632,7 +632,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const fab   = document.getElementById('bgmFab');
   const icon  = document.getElementById('bgmFabIcon');
   const label = document.getElementById('bgmFabLabel');
-
   if(!audio || !fab) return;
 
   // 상태 표시
@@ -646,7 +645,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 처음엔 보이기 + 몇 초 뒤 축소
+  // 처음엔 FAB 보이고 3.5초 후 아이콘만 남기기
   function showFab(){
     if(fab.style.display !== 'flex'){
       fab.style.display = 'flex';
@@ -655,58 +654,58 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 가능한 한 빨리(무음) 재생 시도
-  audio.volume = 0.0;      
-  audio.muted  = true;     
-  audio.play().catch(()=>{}); 
+  // 항상 '재생'을 시도하는 함수 (정책상 필요하면 언뮤트만 조건 처리)
+  async function unlockAndPlay(){
+    try{
+      if (audio.muted) audio.muted = false;   // 필요할 때만 언뮤트
+      if (audio.paused) await audio.play();   // 매번 play 시도
+      return true;
+    }catch(e){
+      return false;
+    }
+  }
+
+  // 초기: 무음 자동재생 시도(정책 우회용), FAB 표시
+  audio.volume = 0.0;
+  audio.muted  = true;
+  audio.play().catch(()=>{});
   showFab();
   setIcon(false);
 
-  // 사용자 제스처로 언뮤트+페이드인
-  const unlockEvents = ['pointerdown','click','keydown','wheel','touchstart','scroll','mousemove'];
-  let unlocked = false, unlocking = false;
+  // FAB 클릭: 토글 (즉시 아이콘 갱신 + 실제 상태로 재동기화)
+  fab.addEventListener('click', async (e)=>{
+    e.preventDefault(); e.stopPropagation();
 
-  async function unlockAndPlay(){
-    if(unlocked || unlocking) return;
-    unlocking = true;
-    try{
-      audio.muted  = false;
-      await audio.play();
-      unlocked = true;
-      // 부드러운 페이드인
-      const target=0.5, steps=15, step=target/steps;
-      let i=0; const id=setInterval(()=>{
-        audio.volume = Math.min(target, (audio.volume||0)+step);
-        if(++i>=steps) clearInterval(id);
-      }, 100);
+    if (audio.paused) {
+      // 낙관 갱신
       setIcon(true);
-    }catch(e){}
-    finally{ unlocking = false; }
-  }
-  unlockEvents.forEach(ev=>document.addEventListener(ev, unlockAndPlay, {passive:true, once:false}));
+      const ok = await unlockAndPlay();
+      if (ok) {
+        // 부드러운 페이드인
+        const target=0.5, steps=15, step=target/steps;
+        let i=0; const id=setInterval(()=>{
+          audio.volume = Math.min(target, (audio.volume||0)+step);
+          if(++i>=steps) clearInterval(id);
+        }, 100);
+      } else {
+        // 실패하면 실제 상태 기준으로 동기화
+        setIcon(!audio.muted && !audio.paused);
+      }
+    } else {
+      audio.pause();
+      setIcon(false);
+    }
+  });
 
-// FAB 클릭: 토글  (아이콘 즉시 갱신 + 이벤트 누수 방지)
-fab.addEventListener('click', async (e)=>{
-  e.preventDefault();
-  e.stopPropagation();
-
-  if (audio.paused || audio.muted) {
-    await unlockAndPlay();                 // 언뮤트 + 재생 시도
-  } else {
-    audio.pause();                         // 일시정지
-  }
-  // 클릭 직후 UI도 바로 갱신 (Promise 대기 중에도 느낌 살리기)
-  setIcon(!audio.muted && !audio.paused);
-});
-
-  // 혹시 트랙이 끝나면 아이콘 꺼짐 상태로
-  audio.addEventListener('ended', ()=> setIcon(false));
-  // 상태 동기화
-  audio.addEventListener('play', ()=>{ setIcon(!audio.muted && !audio.paused); showFab(); });
-  audio.addEventListener('pause',()=> setIcon(false));
-  audio.addEventListener('volumechange',()=> setIcon(!audio.muted && !audio.paused));
+  // ---- 상태 동기화 이벤트 (4개 모두 필요) ----
+  audio.addEventListener('playing', ()=> setIcon(true)); // 재생 확정 시
+  audio.addEventListener('play',    ()=>{ setIcon(!audio.muted && !audio.paused); showFab(); });
+  audio.addEventListener('pause',   ()=> setIcon(false));
+  audio.addEventListener('volumechange', ()=> setIcon(!audio.muted && !audio.paused));
+  audio.addEventListener('ended',   ()=> setIcon(false)); // loop 해제시 대비
 })();
 </script>
+
 
 
 
