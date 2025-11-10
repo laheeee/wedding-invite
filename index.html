@@ -685,16 +685,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   unlockEvents.forEach(ev=>document.addEventListener(ev, unlockAndPlay, {passive:true, once:false}));
 
-  // FAB 클릭: 토글
-  fab.addEventListener('click', async ()=>{
-    if(audio.paused || audio.muted){
-      await unlockAndPlay();
-    }else{
-      audio.pause();
-      setIcon(false);
-    }
-  });
+// FAB 클릭: 토글  (아이콘 즉시 갱신 + 이벤트 누수 방지)
+fab.addEventListener('click', async (e)=>{
+  e.preventDefault();
+  e.stopPropagation();
 
+  if (audio.paused || audio.muted) {
+    await unlockAndPlay();                 // 언뮤트 + 재생 시도
+  } else {
+    audio.pause();                         // 일시정지
+  }
+  // 클릭 직후 UI도 바로 갱신 (Promise 대기 중에도 느낌 살리기)
+  setIcon(!audio.muted && !audio.paused);
+});
+
+  // 혹시 트랙이 끝나면 아이콘 꺼짐 상태로
+  audio.addEventListener('ended', ()=> setIcon(false));
   // 상태 동기화
   audio.addEventListener('play', ()=>{ setIcon(!audio.muted && !audio.paused); showFab(); });
   audio.addEventListener('pause',()=> setIcon(false));
